@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation("com.squareup.picasso:picasso:2.8")
+    implementation(libs.play.services.auth) // Added for Google Sign-In support
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

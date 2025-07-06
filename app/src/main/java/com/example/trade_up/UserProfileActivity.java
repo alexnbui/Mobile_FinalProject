@@ -1,6 +1,7 @@
 package com.example.trade_up;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -34,7 +35,7 @@ import java.util.Map;
 public class UserProfileActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private ImageView imgProfilePicture;
-    private Button btnChangePhoto, btnSaveProfile;
+    private Button btnChangePhoto, btnSaveProfile, btnDeleteAccount;
     private TextInputEditText etDisplayName, etBio, etContactInfo;
     private TextView tvRating;
     private Uri imageUri;
@@ -59,6 +60,7 @@ public class UserProfileActivity extends AppCompatActivity {
         imgProfilePicture = findViewById(R.id.imgProfilePicture);
         btnChangePhoto = findViewById(R.id.btnChangePhoto);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
+        btnDeleteAccount = findViewById(R.id.btnDeleteAccount);
         etDisplayName = findViewById(R.id.etDisplayName);
         etBio = findViewById(R.id.etBio);
         etContactInfo = findViewById(R.id.etContactInfo);
@@ -76,6 +78,12 @@ public class UserProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 saveUserProfile();
+            }
+        });
+        btnDeleteAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDeleteAccountDialog();
             }
         });
     }
@@ -202,5 +210,34 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         });
     }
-}
 
+    private void showDeleteAccountDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Delete Account")
+            .setMessage("Are you sure you want to permanently delete your account? This action cannot be undone.")
+            .setPositiveButton("Delete", (dialog, which) -> deleteAccount())
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void deleteAccount() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+        String uid = user.getUid();
+        // Delete user data from Firestore
+        db.collection("users").document(uid).delete()
+            .addOnSuccessListener(aVoid -> {
+                // Delete user from FirebaseAuth
+                user.delete()
+                    .addOnSuccessListener(aVoid2 -> {
+                        Toast.makeText(UserProfileActivity.this, "Account deleted", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete account: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            })
+            .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete user data: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+}
