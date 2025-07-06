@@ -9,25 +9,15 @@
     tools:context=".MainActivity"
     android:background="@drawable/ui_loginbackground">
 
-    <TextView
-        android:id="@+id/textView"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="TRADE-UP"
-        android:layout_marginTop="60dp"
-        android:textSize="40dp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:textColor="@color/white"/>
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <TextView
-        android:id="@+id/textView2"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sell lazy - Buy easy"
-        android:layout_marginTop="250dp"
-        android:textSize="40dp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:textColor="@color/white"/>
+        app:menu="@menu/bottom_nav_menu"/>
 </LinearLayout>
