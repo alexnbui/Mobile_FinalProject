@@ -8,7 +8,7 @@
     android:padding="24dp">
 
     <ImageView
-        android:id="@+id/imgProfilePicture"
+        android:id="@+id/imgPublicProfilePicture"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:src="@drawable/ic_person"
@@ -19,39 +19,47 @@
         android:contentDescription="Profile Picture"/>
 
     <TextView
-        android:id="@+id/tvDisplayName"
+        android:id="@+id/tvPublicDisplayName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Display Name"
         android:textStyle="bold"
         android:textSize="22sp"
-        android:textColor="#E0E0E0"
+        android:textColor="#1976D2"
         android:layout_marginTop="16dp"/>
 
     <TextView
-        android:id="@+id/tvBio"
+        android:id="@+id/tvPublicBio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Bio"
-        android:textColor="#E0E0E0"
-        android:layout_marginTop="12dp"/>
+        android:textColor="#333333"
+        android:layout_marginTop="8dp"/>
 
     <TextView
-        android:id="@+id/tvContactInfo"
+        android:id="@+id/tvPublicContactInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Contact Info"
-        android:textColor="#E0E0E0"
-        android:layout_marginTop="12dp"/>
+        android:textColor="#333333"
+        android:layout_marginTop="8dp"/>
 
     <TextView
-        android:id="@+id/tvRating"
+        android:id="@+id/tvPublicRating"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Rating: 0.0"
-        android:textColor="#FFA000"
+        android:textColor="#e68304"
         android:textSize="18sp"
         android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/tvPublicTotalTransactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Transactions: 0"
+        android:textColor="#888888"
+        android:layout_marginTop="4dp"/>
 
 </LinearLayout>
 

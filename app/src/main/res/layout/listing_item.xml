@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/imgListingPhoto"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_launcher_background"
+        android:background="#E0E0E0"
+        android:scaleType="centerCrop"
+        android:contentDescription="Listing Photo"/>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp">
+        <TextView
+            android:id="@+id/tvListingTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textStyle="bold"
+            android:textColor="#1976D2"
+            android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/tvListingStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textColor="#888888"
+            android:textSize="14sp"/>
+        <TextView
+            android:id="@+id/tvListingViews"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Views: 0"
+            android:textColor="#888888"
+            android:textSize="12sp"/>
+        <TextView
+            android:id="@+id/tvListingInteractions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Interactions: 0"
+            android:textColor="#888888"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnEditListing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit"
+        android:layout_marginEnd="8dp"/>
+
+    <Button
+        android:id="@+id/btnDeleteListing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"/>
+
+</LinearLayout>

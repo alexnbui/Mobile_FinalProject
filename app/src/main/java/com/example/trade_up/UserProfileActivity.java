@@ -111,26 +111,34 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void loadUserProfile() {
         FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null) return;
-        DocumentReference docRef = db.collection("users").document(user.getUid());
-        docRef.get().addOnSuccessListener(new OnSuccessListener<com.google.firebase.firestore.DocumentSnapshot>() {
-            @Override
-            public void onSuccess(com.google.firebase.firestore.DocumentSnapshot documentSnapshot) {
+        if (user == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        // Load profile picture
+        db.collection("users").document(user.getUid()).get()
+            .addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
-                    UserProfile profile = documentSnapshot.toObject(UserProfile.class);
-                    if (profile != null) {
-                        etDisplayName.setText(profile.getDisplayName());
-                        etBio.setText(profile.getBio());
-                        etContactInfo.setText(profile.getContactInfo());
-                        tvRating.setText("Rating: " + profile.getRating());
-                        photoUrl = profile.getPhotoUrl();
-                        if (photoUrl != null && !photoUrl.isEmpty()) {
-                            Picasso.get().load(photoUrl).into(imgProfilePicture);
-                        }
+                    String displayName = documentSnapshot.getString("displayName");
+                    String bio = documentSnapshot.getString("bio");
+                    String contactInfo = documentSnapshot.getString("contactInfo");
+                    Double rating = documentSnapshot.getDouble("rating");
+                    String profilePicUrl = documentSnapshot.getString("profilePicUrl");
+
+                    etDisplayName.setText(displayName != null ? displayName : "");
+                    etBio.setText(bio != null ? bio : "");
+                    etContactInfo.setText(contactInfo != null ? contactInfo : "");
+                    tvRating.setText("Rating: " + (rating != null ? String.format("%.1f", rating) : "0.0"));
+
+                    if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
+                        Picasso.get().load(profilePicUrl).placeholder(R.drawable.ic_person).into(imgProfilePicture);
+                    } else {
+                        imgProfilePicture.setImageResource(R.drawable.ic_person);
                     }
                 }
-            }
-        });
+            })
+            .addOnFailureListener(e -> Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show());
     }
 
     private void saveUserProfile() {
