@@ -47,7 +47,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         loadSellerInfo(sellerUid);
 
         layoutSellerInfo.setOnClickListener(v -> {
-            if (sellerUid != null && !sellerUid.isEmpty()) {
+            if (sellerUid != null && sellerUid.length() == 0) {
                 Intent intent = new Intent(ItemDetailActivity.this, PublicProfileActivity.class);
                 intent.putExtra("USER_UID", sellerUid);
                 startActivity(intent);
@@ -78,7 +78,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     tvItemCategory.setText(category != null ? category : "");
                     tvItemCondition.setText(condition != null ? condition : "");
                     tvItemPrice.setText(price != null ? "$" + String.format("%.2f", price) : "");
-                    if (photoUrl != null && !photoUrl.isEmpty()) {
+                    if (photoUrl != null && photoUrl.length() != 0) {
                         Picasso.get().load(photoUrl).placeholder(R.drawable.ic_launcher_background).into(imgItemPhoto);
                     } else {
                         imgItemPhoto.setImageResource(R.drawable.ic_launcher_background);
@@ -97,7 +97,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     String profilePicUrl = documentSnapshot.getString("profilePicUrl");
                     tvSellerName.setText(displayName != null ? displayName : "");
                     tvSellerRating.setText("Rating: " + (rating != null ? String.format("%.1f", rating) : "0.0"));
-                    if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
+                    if (profilePicUrl != null && profilePicUrl.length() != 0) {
                         Picasso.get().load(profilePicUrl).placeholder(R.drawable.ic_person).into(imgSellerAvatar);
                     } else {
                         imgSellerAvatar.setImageResource(R.drawable.ic_person);

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.exifinterface.media.ExifInterface;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -86,10 +88,9 @@ public class AddItemActivity extends AppCompatActivity {
     }
 
     private void openFileChooser() {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
 
     @Override
@@ -99,11 +100,52 @@ public class AddItemActivity extends AppCompatActivity {
             imageUri = data.getData();
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                // Fix orientation
+                bitmap = handleImageOrientation(imageUri, bitmap);
                 imgItemPhotoPreview.setImageBitmap(bitmap);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private Bitmap handleImageOrientation(Uri uri, Bitmap bitmap) {
+        try {
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            android.database.Cursor cursor = getContentResolver().query(uri, filePathColumn, null, null, null);
+            String picturePath = null;
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    picturePath = cursor.getString(columnIndex);
+                }
+                cursor.close();
+            }
+            if (picturePath != null) {
+                ExifInterface exif = new ExifInterface(picturePath);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+                Matrix matrix = new Matrix();
+                switch (orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90:
+                        matrix.postRotate(90);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_180:
+                        matrix.postRotate(180);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_270:
+                        matrix.postRotate(270);
+                        break;
+                    default:
+                        break;
+                }
+                if (orientation != ExifInterface.ORIENTATION_NORMAL) {
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 
     private void loadItemForEdit() {

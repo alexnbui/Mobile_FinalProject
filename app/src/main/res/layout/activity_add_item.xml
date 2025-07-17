@@ -15,7 +15,7 @@
             android:text="Add New Item"
             android:textStyle="bold"
             android:textSize="22sp"
-            android:textColor="#1976D2"
+            android:textColor="#ffc300"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"/>
 
@@ -35,7 +35,8 @@
             android:layout_height="wrap_content"
             android:text="Add Photo"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#028485"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -113,7 +114,10 @@
             android:id="@+id/spinnerStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="12dp"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"/>
 
         <Button
             android:id="@+id/btnPreviewItem"
@@ -121,14 +125,16 @@
             android:layout_height="wrap_content"
             android:text="Preview"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#028485"/>
 
         <Button
             android:id="@+id/btnSubmitItem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit Item"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#028485"/>
 
     </LinearLayout>
 </ScrollView>

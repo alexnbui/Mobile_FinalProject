@@ -60,6 +60,22 @@
             android:layout_marginTop="4dp"
             android:textColor="#888888"/>
 
+        <TextView
+            android:id="@+id/tvItemViews"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Views: 0"
+            android:textColor="#888888"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvItemInteractions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Interactions: 0"
+            android:textColor="#888888"
+            android:layout_marginTop="4dp"/>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -113,4 +129,3 @@
 
     </LinearLayout>
 </ScrollView>
-

@@ -27,17 +27,26 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnItemSelectedListener(item -> {
             Fragment selectedFragment;
-            if (item.getItemId() == R.id.nav_buy) {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                selectedFragment = new HomeFragment();
+            } else if (id == R.id.nav_buy) {
                 selectedFragment = new BuyFragment();
-            } else {
+            } else if (id == R.id.nav_sell) {
                 selectedFragment = new SellFragment();
+            } else if (id == R.id.nav_search) {
+                selectedFragment = new SearchFragment();
+            } else if (id == R.id.nav_profile) {
+                selectedFragment = new ProfileFragment();
+            } else {
+                selectedFragment = new HomeFragment();
             }
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, selectedFragment)
                     .commit();
             return true;
         });
-        // Set default fragment
-        bottomNav.setSelectedItemId(R.id.nav_buy);
+        // Set default fragment to Home
+        bottomNav.setSelectedItemId(R.id.nav_home);
     }
 }
