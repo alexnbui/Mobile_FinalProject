@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -97,6 +100,30 @@ public class SellFragment extends Fragment {
             } else {
                 holder.imgPhoto.setImageResource(R.drawable.ic_launcher_background);
             }
+            // Set up status spinner
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(holder.itemView.getContext(), R.array.listing_status_options, android.R.layout.simple_spinner_item);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            holder.spinnerStatus.setAdapter(adapter);
+            int statusPos = 0;
+            if (listing.status != null) {
+                if (listing.status.equalsIgnoreCase("Available")) statusPos = 0;
+                else if (listing.status.equalsIgnoreCase("Sold")) statusPos = 1;
+                else if (listing.status.equalsIgnoreCase("Paused")) statusPos = 2;
+            }
+            holder.spinnerStatus.setSelection(statusPos);
+            holder.spinnerStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                    String newStatus = parent.getItemAtPosition(pos).toString();
+                    if (!newStatus.equals(listing.status)) {
+                        db.collection("items").document(listing.id).update("status", newStatus);
+                        listing.status = newStatus;
+                        holder.tvStatus.setText(newStatus);
+                    }
+                }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
             holder.btnEdit.setOnClickListener(v -> editListing(listing));
             holder.btnDelete.setOnClickListener(v -> deleteListing(listing));
         }
@@ -105,6 +132,7 @@ public class SellFragment extends Fragment {
         class ListingViewHolder extends RecyclerView.ViewHolder {
             ImageView imgPhoto;
             TextView tvTitle, tvStatus, tvViews, tvInteractions;
+            Spinner spinnerStatus;
             Button btnEdit, btnDelete;
             ListingViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -113,6 +141,7 @@ public class SellFragment extends Fragment {
                 tvStatus = itemView.findViewById(R.id.tvListingStatus);
                 tvViews = itemView.findViewById(R.id.tvListingViews);
                 tvInteractions = itemView.findViewById(R.id.tvListingInteractions);
+                spinnerStatus = itemView.findViewById(R.id.spinnerListingStatus);
                 btnEdit = itemView.findViewById(R.id.btnEditListing);
                 btnDelete = itemView.findViewById(R.id.btnDeleteListing);
             }

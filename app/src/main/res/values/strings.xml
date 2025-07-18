@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Trade-up</string>
+    <string-array name="listing_status_options">
+        <item>Available</item>
+        <item>Sold</item>
+        <item>Paused</item>
+    </string-array>
 </resources>

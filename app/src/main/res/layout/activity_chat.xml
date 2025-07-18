@@ -37,14 +37,54 @@
             android:layout_marginStart="12dp"/>
     </LinearLayout>
 
-    <!-- Placeholder for chat messages -->
-    <TextView
+    <!-- Chat message list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:overScrollMode="always"
+        android:scrollbars="vertical"/>
+
+    <!-- Message input area -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chat messages go here..."
-        android:gravity="center"
-        android:layout_marginTop="32dp"
-        android:textColor="#888888"/>
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="#F5F5F5">
+
+        <ImageButton
+            android:id="@+id/btnAttachImage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:src="@android:drawable/ic_menu_camera"
+            android:background="@android:color/transparent"
+            android:contentDescription="Attach Image"/>
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
+            android:layout_weight="1"
+            android:hint="Type a message..."
+            android:background="@android:color/white"
+            android:padding="8dp"
+            android:inputType="textMultiLine|textCapSentences"/>
+
+        <ImageButton
+            android:id="@+id/btnSend"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:src="@android:drawable/ic_menu_send"
+            android:background="@android:color/transparent"
+            android:contentDescription="Send"/>
+    </LinearLayout>
 
 </LinearLayout>
-

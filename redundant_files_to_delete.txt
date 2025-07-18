@@ -1,0 +1,16 @@
+Java/Kotlin files to delete:
+- HomeActivity.java
+- HomeFragment.java
+- UserListActivity.java
+- SearchActivity.java
+- SearchFragment.java
+- MainActivity.java
+
+Layout files to delete:
+- activity_home.xml
+- fragment_home.xml
+- activity_user_list.xml
+- user_list_item.xml
+- activity_search.xml
+- activity_main.xml
+

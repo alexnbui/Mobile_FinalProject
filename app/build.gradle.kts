@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation("com.squareup.picasso:picasso:2.8")
     implementation(libs.play.services.auth) // Added for Google Sign-In support
+    implementation("com.google.firebase:firebase-messaging:23.4.1") // Added for Firebase Cloud Messaging
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

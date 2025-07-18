@@ -35,7 +35,7 @@ import java.util.Map;
 public class UserProfileActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private ImageView imgProfilePicture;
-    private Button btnChangePhoto, btnSaveProfile, btnDeleteAccount;
+    private Button btnChangePhoto, btnSaveProfile, btnDeleteAccount, btnLogout, btnDeactivateAccount;
     private TextInputEditText etDisplayName, etBio, etContactInfo;
     private TextView tvRating;
     private Uri imageUri;
@@ -61,6 +61,8 @@ public class UserProfileActivity extends AppCompatActivity {
         btnChangePhoto = findViewById(R.id.btnChangePhoto);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
         btnDeleteAccount = findViewById(R.id.btnDeleteAccount);
+        btnLogout = findViewById(R.id.btnLogout);
+        btnDeactivateAccount = findViewById(R.id.btnDeactivateAccount);
         etDisplayName = findViewById(R.id.etDisplayName);
         etBio = findViewById(R.id.etBio);
         etContactInfo = findViewById(R.id.etContactInfo);
@@ -84,6 +86,22 @@ public class UserProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showDeleteAccountDialog();
+            }
+        });
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }
+        });
+        btnDeactivateAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDeactivateAccountDialog();
             }
         });
     }
@@ -247,5 +265,31 @@ public class UserProfileActivity extends AppCompatActivity {
                     .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete account: " + e.getMessage(), Toast.LENGTH_LONG).show());
             })
             .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete user data: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
+    private void showDeactivateAccountDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Deactivate Account")
+            .setMessage("Are you sure you want to deactivate your account? You can reactivate it by logging in again.")
+            .setPositiveButton("Deactivate", (dialog, which) -> deactivateAccount())
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void deactivateAccount() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+        String uid = user.getUid();
+        db.collection("users").document(uid)
+            .update("isDeactivated", true)
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(UserProfileActivity.this, "Account deactivated", Toast.LENGTH_SHORT).show();
+                mAuth.signOut();
+                Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            })
+            .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to deactivate account: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 }

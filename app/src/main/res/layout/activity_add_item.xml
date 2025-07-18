@@ -19,21 +19,19 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"/>
 
-        <ImageView
-            android:id="@+id/imgItemPhotoPreview"
+        <!-- Multiple image preview -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvItemPhotos"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:src="@drawable/ic_launcher_background"
-            android:scaleType="centerCrop"
-            android:background="#E0E0E0"
-            android:contentDescription="Item Photo Preview"
-            android:layout_marginBottom="8dp"/>
+            android:layout_height="100dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"/>
 
         <Button
             android:id="@+id/btnAddPhoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Add Photo"
+            android:text="Add Photo(s)"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
             android:backgroundTint="#028485"/>
@@ -98,11 +96,46 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etItemLocation"
+                android:id="@+id/etItemBehavior"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Location"/>
+                android:hint="Item Behavior (optional)"/>
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAdditionalTags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Additional Tags (optional)"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etItemLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Location"/>
+            </com.google.android.material.textfield.TextInputLayout>
+            <Button
+                android:id="@+id/btnAutofillLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Autofill"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="#028485"/>
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background2">
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchViewBuy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search items..."
+        android:iconifiedByDefault="false"
+        android:background="#FFF"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+        <Spinner
+            android:id="@+id/spinnerCategory"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:layout_weight="1"
+            android:prompt="Category"/>
+        <Spinner
+            android:id="@+id/spinnerCondition"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:layout_weight="1"
+            android:prompt="Condition"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+        <EditText
+            android:id="@+id/etMinPrice"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Min Price"
+            android:inputType="numberDecimal"
+            android:minHeight="48dp"
+            android:padding="12dp"/>
+        <EditText
+            android:id="@+id/etMaxPrice"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Max Price"
+            android:inputType="numberDecimal"
+            android:layout_marginStart="8dp"
+            android:minHeight="48dp"
+            android:padding="12dp"/>
+        <EditText
+            android:id="@+id/etDistance"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Distance (km)"
+            android:inputType="numberDecimal"
+            android:layout_marginStart="8dp"
+            android:minHeight="48dp"
+            android:padding="12dp"/>
+        <Button
+            android:id="@+id/btnUseGPS"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="GPS"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#028485"
+            android:minHeight="48dp"
+            android:minWidth="48dp"
+            android:padding="12dp"/>
+    </LinearLayout>
+    <Spinner
+        android:id="@+id/spinnerSort"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:prompt="Sort By"
+        android:layout_margin="8dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewBuyItems"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"/>
+
+</LinearLayout>
