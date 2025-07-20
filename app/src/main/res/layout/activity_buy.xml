@@ -5,6 +5,13 @@
     android:orientation="vertical"
     android:background="@drawable/background2">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarBuy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchViewBuy"
         android:layout_width="match_parent"
@@ -25,7 +32,7 @@
             android:minHeight="48dp"
             android:padding="12dp"
             android:layout_weight="1"
-            android:prompt="Category"/>
+            android:prompt="@string/category"/>
         <Spinner
             android:id="@+id/spinnerCondition"
             android:layout_width="0dp"
@@ -33,7 +40,7 @@
             android:minHeight="48dp"
             android:padding="12dp"
             android:layout_weight="1"
-            android:prompt="Condition"
+            android:prompt="@string/condition"
             android:layout_marginStart="8dp"/>
     </LinearLayout>
     <LinearLayout
@@ -81,13 +88,39 @@
             android:minWidth="48dp"
             android:padding="12dp"/>
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+        <EditText
+            android:id="@+id/etManualLocation"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="2"
+            android:hint="Enter address or lat,lng"
+            android:inputType="text"
+            android:layout_marginStart="8dp"
+            android:minHeight="48dp"
+            android:padding="12dp"/>
+        <Button
+            android:id="@+id/btnSearchLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Search"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#028485"
+            android:minHeight="48dp"
+            android:minWidth="48dp"
+            android:padding="12dp"/>
+    </LinearLayout>
     <Spinner
         android:id="@+id/spinnerSort"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:minHeight="48dp"
         android:padding="12dp"
-        android:prompt="Sort By"
+        android:prompt="@string/sort_by"
         android:layout_margin="8dp"/>
 
     <androidx.recyclerview.widget.RecyclerView

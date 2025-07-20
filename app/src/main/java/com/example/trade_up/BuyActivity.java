@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.Geocoder;
+import android.location.Address;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,6 +31,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class BuyActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -37,8 +41,8 @@ public class BuyActivity extends AppCompatActivity {
     private List<Item> filteredItems = new ArrayList<>();
     private FirebaseFirestore db;
     private Spinner spinnerCategory, spinnerCondition, spinnerSort;
-    private EditText etMinPrice, etMaxPrice, etDistance;
-    private Button btnUseGPS;
+    private EditText etMinPrice, etMaxPrice, etDistance, etManualLocation;
+    private Button btnUseGPS, btnSearchLocation;
     private Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
     private double userLat = 0, userLng = 0;
@@ -77,6 +81,8 @@ public class BuyActivity extends AppCompatActivity {
         etMaxPrice = findViewById(R.id.etMaxPrice);
         etDistance = findViewById(R.id.etDistance);
         btnUseGPS = findViewById(R.id.btnUseGPS);
+        etManualLocation = findViewById(R.id.etManualLocation);
+        btnSearchLocation = findViewById(R.id.btnSearchLocation);
         // Populate spinners
         ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getCategories());
         catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -95,6 +101,8 @@ public class BuyActivity extends AppCompatActivity {
         etMaxPrice.addTextChangedListener(new SimpleTextWatcher(this::triggerDebouncedSearch));
         etDistance.addTextChangedListener(new SimpleTextWatcher(this::triggerDebouncedSearch));
         btnUseGPS.setOnClickListener(v -> requestLocation());
+        btnSearchLocation.setOnClickListener(v -> handleManualLocation());
+        etManualLocation.addTextChangedListener(new SimpleTextWatcher(this::triggerDebouncedSearch));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -117,8 +125,29 @@ public class BuyActivity extends AppCompatActivity {
                     Item item = Item.fromDocument(doc);
                     allItems.add(item);
                 }
+                // If no items from Firestore, add mock data for demo/testing
+                if (allItems.isEmpty()) {
+                    allItems.addAll(getMockItems());
+                }
                 filterItems(searchView.getQuery().toString());
+            })
+            .addOnFailureListener(e -> {
+                // On error, also show mock data
+                allItems.clear();
+                allItems.addAll(getMockItems());
+                filterItems("");
             });
+    }
+
+    // Provide a list of mock items for demo/testing
+    private List<Item> getMockItems() {
+        List<Item> mock = new ArrayList<>();
+        mock.add(new Item("1", "Bicycle", "A used mountain bike", 120.0, "Sports", "Good", 21.0285, 105.8542, System.currentTimeMillis(), "Available", "https://example.com/bike.jpg"));
+        mock.add(new Item("2", "Laptop", "Gaming laptop, 16GB RAM", 650.0, "Electronics", "Like New", 21.0300, 105.8500, System.currentTimeMillis(), "Available", "https://example.com/laptop.jpg"));
+        mock.add(new Item("3", "Desk Chair", "Ergonomic office chair", 45.0, "Furniture", "Fair", 21.0250, 105.8600, System.currentTimeMillis(), "Available", "https://example.com/chair.jpg"));
+        mock.add(new Item("4", "Textbook", "Calculus, 8th Edition", 15.0, "Books", "Good", 21.0270, 105.8520, System.currentTimeMillis(), "Available", "https://example.com/book.jpg"));
+        mock.add(new Item("5", "Guitar", "Acoustic guitar, barely used", 90.0, "Music", "Like New", 21.0290, 105.8580, System.currentTimeMillis(), "Available", "https://example.com/guitar.jpg"));
+        return mock;
     }
 
     private void triggerDebouncedSearch() {
@@ -221,11 +250,20 @@ public class BuyActivity extends AppCompatActivity {
     }
 
     private void requestLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
         } else {
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location location = null;
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                //noinspection MissingPermission
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            }
+            if (location == null && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                //noinspection MissingPermission
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
             if (location != null) {
                 userLat = location.getLatitude();
                 userLng = location.getLongitude();
@@ -308,7 +346,7 @@ public class BuyActivity extends AppCompatActivity {
         public double lng;
         public int views; // For popularity
         public long timestamp;
-        // ...add other fields as needed...
+        public String status;
 
         public static Item fromDocument(com.google.firebase.firestore.DocumentSnapshot doc) {
             Item item = new Item();
@@ -323,8 +361,22 @@ public class BuyActivity extends AppCompatActivity {
             item.lng = doc.getDouble("lng") != null ? doc.getDouble("lng") : 0;
             item.views = doc.getLong("views") != null ? doc.getLong("views").intValue() : 0;
             item.timestamp = doc.getLong("timestamp") != null ? doc.getLong("timestamp") : 0;
-            // ...add other fields as needed...
+            item.status = doc.getString("status");
             return item;
+        }
+
+        public Item() {}
+        public Item(String id, String title, String description, double price, String category, String condition, double lat, double lng, long timestamp, String status, String imageUrl) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.price = price;
+            this.category = category;
+            this.condition = condition;
+            this.lat = lat;
+            this.lng = lng;
+            this.timestamp = timestamp;
+            this.status = status;
         }
     }
 
@@ -370,5 +422,31 @@ public class BuyActivity extends AppCompatActivity {
             android.widget.TextView tv1, tv2;
             ItemVH(View v) { super(v); tv1 = v.findViewById(android.R.id.text1); tv2 = v.findViewById(android.R.id.text2); }
         }
+    }
+
+    private void handleManualLocation() {
+        String input = etManualLocation.getText().toString().trim();
+        if (input.isEmpty()) return;
+        if (input.contains(",")) {
+            // Try to parse as lat,lng
+            String[] parts = input.split(",");
+            try {
+                userLat = Double.parseDouble(parts[0].trim());
+                userLng = Double.parseDouble(parts[1].trim());
+                triggerDebouncedSearch();
+                return;
+            } catch (Exception ignored) {}
+        }
+        // Try to geocode as address
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            java.util.List<Address> addresses = geocoder.getFromLocationName(input, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address addr = addresses.get(0);
+                userLat = addr.getLatitude();
+                userLng = addr.getLongitude();
+                triggerDebouncedSearch();
+            }
+        } catch (Exception ignored) {}
     }
 }

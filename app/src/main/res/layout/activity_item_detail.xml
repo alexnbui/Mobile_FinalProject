@@ -127,5 +127,46 @@
             </LinearLayout>
         </LinearLayout>
 
+        <Button
+            android:id="@+id/btnChat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Chat with Seller"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#1976D2"
+            android:textColor="#fff"
+            android:textAllCaps="false"/>
+        <Button
+            android:id="@+id/btnMakeOffer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Make Offer"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#388E3C"
+            android:textColor="#fff"
+            android:textAllCaps="false"/>
+        <Button
+            android:id="@+id/btnMarkSold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mark as Sold"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#e68304"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            android:visibility="gone"/>
+
+        <EditText
+            android:id="@+id/etItemLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter location or use GPS"
+            android:inputType="text"
+            android:layout_marginTop="8dp"
+            android:drawableEnd="@android:drawable/ic_menu_mylocation"
+            android:paddingEnd="12dp"
+            android:background="@drawable/edittext_background"
+            android:textColor="#333"
+            android:textColorHint="#888"/>
     </LinearLayout>
 </ScrollView>

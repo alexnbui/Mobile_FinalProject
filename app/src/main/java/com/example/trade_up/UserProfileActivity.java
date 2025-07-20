@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputEditText;
@@ -29,7 +30,9 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UserProfileActivity extends AppCompatActivity {
@@ -37,12 +40,15 @@ public class UserProfileActivity extends AppCompatActivity {
     private ImageView imgProfilePicture;
     private Button btnChangePhoto, btnSaveProfile, btnDeleteAccount, btnLogout, btnDeactivateAccount;
     private TextInputEditText etDisplayName, etBio, etContactInfo;
-    private TextView tvRating;
+    private TextView tvRating, tvTotalTransactions;
     private Uri imageUri;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private StorageReference storageRef;
     private String photoUrl = null;
+    private RecyclerView rvReviews;
+    private ReviewAdapter reviewAdapter;
+    private List<Review> reviewList = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,6 +73,11 @@ public class UserProfileActivity extends AppCompatActivity {
         etBio = findViewById(R.id.etBio);
         etContactInfo = findViewById(R.id.etContactInfo);
         tvRating = findViewById(R.id.tvRating);
+        tvTotalTransactions = findViewById(R.id.tvTotalTransactions);
+        rvReviews = findViewById(R.id.rvReviews);
+        rvReviews.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        reviewAdapter = new ReviewAdapter(reviewList);
+        rvReviews.setAdapter(reviewAdapter);
     }
 
     private void addEvents() {
@@ -134,7 +145,6 @@ public class UserProfileActivity extends AppCompatActivity {
             finish();
             return;
         }
-        // Load profile picture
         db.collection("users").document(user.getUid()).get()
             .addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
@@ -142,21 +152,35 @@ public class UserProfileActivity extends AppCompatActivity {
                     String bio = documentSnapshot.getString("bio");
                     String contactInfo = documentSnapshot.getString("contactInfo");
                     Double rating = documentSnapshot.getDouble("rating");
+                    Long totalTransactions = documentSnapshot.getLong("totalTransactions");
                     String profilePicUrl = documentSnapshot.getString("profilePicUrl");
-
                     etDisplayName.setText(displayName != null ? displayName : "");
                     etBio.setText(bio != null ? bio : "");
                     etContactInfo.setText(contactInfo != null ? contactInfo : "");
                     tvRating.setText("Rating: " + (rating != null ? String.format("%.1f", rating) : "0.0"));
-
+                    tvTotalTransactions.setText("Transactions: " + (totalTransactions != null ? totalTransactions : 0));
                     if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
-                        Picasso.get().load(profilePicUrl).placeholder(R.drawable.ic_person).into(imgProfilePicture);
-                    } else {
-                        imgProfilePicture.setImageResource(R.drawable.ic_person);
+                        Picasso.get().load(profilePicUrl).into(imgProfilePicture);
                     }
                 }
-            })
-            .addOnFailureListener(e -> Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show());
+                loadUserReviews(user.getUid());
+            });
+    }
+
+    private void loadUserReviews(String userUid) {
+        db.collection("reviews").whereEqualTo("toUserUid", userUid).get()
+            .addOnSuccessListener(querySnapshot -> {
+                reviewList.clear();
+                for (var doc : querySnapshot) {
+                    reviewList.add(new Review(
+                        doc.getString("fromUserUid"),
+                        doc.getDouble("rating"),
+                        doc.getString("review"),
+                        doc.getLong("timestamp")
+                    ));
+                }
+                reviewAdapter.notifyDataSetChanged();
+            });
     }
 
     private void saveUserProfile() {
@@ -250,27 +274,22 @@ public class UserProfileActivity extends AppCompatActivity {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) return;
         String uid = user.getUid();
-        // Delete user data from Firestore
-        db.collection("users").document(uid).delete()
-            .addOnSuccessListener(aVoid -> {
-                // Delete user from FirebaseAuth
-                user.delete()
-                    .addOnSuccessListener(aVoid2 -> {
-                        Toast.makeText(UserProfileActivity.this, "Account deleted", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        finish();
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete account: " + e.getMessage(), Toast.LENGTH_LONG).show());
-            })
-            .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to delete user data: " + e.getMessage(), Toast.LENGTH_LONG).show());
+        // Xóa user khỏi Firestore
+        db.collection("users").document(uid).delete();
+        // Xóa user khỏi Auth
+        user.delete().addOnCompleteListener(task -> {
+            Toast.makeText(this, "Account deleted", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void showDeactivateAccountDialog() {
         new AlertDialog.Builder(this)
             .setTitle("Deactivate Account")
-            .setMessage("Are you sure you want to deactivate your account? You can reactivate it by logging in again.")
+            .setMessage("Are you sure you want to deactivate your account? You can reactivate by logging in again.")
             .setPositiveButton("Deactivate", (dialog, which) -> deactivateAccount())
             .setNegativeButton("Cancel", null)
             .show();
@@ -280,16 +299,52 @@ public class UserProfileActivity extends AppCompatActivity {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) return;
         String uid = user.getUid();
-        db.collection("users").document(uid)
-            .update("isDeactivated", true)
+        db.collection("users").document(uid).update("active", false)
             .addOnSuccessListener(aVoid -> {
-                Toast.makeText(UserProfileActivity.this, "Account deactivated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Account deactivated", Toast.LENGTH_SHORT).show();
                 mAuth.signOut();
                 Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 finish();
-            })
-            .addOnFailureListener(e -> Toast.makeText(UserProfileActivity.this, "Failed to deactivate account: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            });
+    }
+
+    private static class Review {
+        String fromUserUid, review;
+        Double rating;
+        Long timestamp;
+        Review(String fromUserUid, Double rating, String review, Long timestamp) {
+            this.fromUserUid = fromUserUid;
+            this.rating = rating;
+            this.review = review;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder> {
+        List<Review> reviews;
+        ReviewAdapter(List<Review> reviews) { this.reviews = reviews; }
+        @Override
+        public ReviewViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, parent, false);
+            return new ReviewViewHolder(v);
+        }
+        @Override
+        public void onBindViewHolder(ReviewViewHolder holder, int position) {
+            Review r = reviews.get(position);
+            holder.tv1.setText("Rating: " + (r.rating != null ? r.rating : "") + " ★");
+            holder.tv2.setText(r.review != null ? r.review : "");
+        }
+        @Override
+        public int getItemCount() { return reviews.size(); }
+        class ReviewViewHolder extends RecyclerView.ViewHolder {
+            TextView tv1, tv2;
+            ReviewViewHolder(View itemView) {
+                super(itemView);
+                tv1 = itemView.findViewById(android.R.id.text1);
+                tv2 = itemView.findViewById(android.R.id.text2);
+            }
+        }
     }
 }

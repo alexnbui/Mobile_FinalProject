@@ -12,6 +12,7 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +20,9 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.location.Location;
+import android.location.LocationManager;
+import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +40,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,13 +66,15 @@ public class AddItemActivity extends AppCompatActivity {
     private String editItemId = null;
     private String originalImageUrl = null;
     private String[] statusOptions = {"Available", "Sold", "Paused"};
+    private ImageView imgItemPhotoPreview;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_item);
         rvItemPhotos = findViewById(R.id.rvItemPhotos);
-        photoAdapter = new ItemPhotoAdapter(imageUris);
+        imgItemPhotoPreview = findViewById(R.id.imgItemPhotoPreview);
+        photoAdapter = new ItemPhotoAdapter(this, imageUris);
         rvItemPhotos.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rvItemPhotos.setAdapter(photoAdapter);
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
@@ -137,11 +145,18 @@ public class AddItemActivity extends AppCompatActivity {
     }
 
     private void autofillLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
         } else {
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location location = null;
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            }
+            if (location == null && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
             if (location != null) {
                 etItemLocation.setText(location.getLatitude() + ", " + location.getLongitude());
             } else {
@@ -282,16 +297,58 @@ public class AddItemActivity extends AppCompatActivity {
             return;
         }
         Uri uri = imageUris.get(index);
-        final StorageReference fileRef = storageRef.child(System.currentTimeMillis() + "_" + index + ".jpg");
-        fileRef.putFile(uri)
-                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                    uploadedUrls.add(downloadUri.toString());
-                    uploadNextImage(index + 1, uploadedUrls, uid, title, description, price, category, condition, location, status, itemBehavior, additionalTags);
-                }))
-                .addOnFailureListener(e -> {
-                    Toast.makeText(AddItemActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
-                    btnSubmitItem.setEnabled(true);
-                });
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+            bitmap = getCorrectlyOrientedBitmap(uri, bitmap);
+            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
+            FileOutputStream out = new FileOutputStream(tempFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            out.close();
+            Uri uploadUri = Uri.fromFile(tempFile);
+            final StorageReference fileRef = storageRef.child(System.currentTimeMillis() + "_" + index + ".jpg");
+            fileRef.putFile(uploadUri)
+                    .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                        uploadedUrls.add(downloadUri.toString());
+                        uploadNextImage(index + 1, uploadedUrls, uid, title, description, price, category, condition, location, status, itemBehavior, additionalTags);
+                    }))
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(AddItemActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
+                        btnSubmitItem.setEnabled(true);
+                    });
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+            btnSubmitItem.setEnabled(true);
+        }
+    }
+
+    private Bitmap getCorrectlyOrientedBitmap(Uri uri, Bitmap bitmap) {
+        try {
+            String path = FileUtils.getPath(this, uri);
+            if (path != null) {
+                ExifInterface exif = new ExifInterface(path);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+                Matrix matrix = new Matrix();
+                switch (orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90:
+                        matrix.postRotate(90);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_180:
+                        matrix.postRotate(180);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_270:
+                        matrix.postRotate(270);
+                        break;
+                    default:
+                        break;
+                }
+                if (orientation != ExifInterface.ORIENTATION_NORMAL) {
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                }
+            }
+        } catch (Exception e) {
+            // ignore, return original bitmap
+        }
+        return bitmap;
     }
 
     private void saveItemToFirestore(String uid, String title, String description, double price, String category, String condition, String location, List<String> imageUrls, String status, String itemBehavior, String additionalTags) {

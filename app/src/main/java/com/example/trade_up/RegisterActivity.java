@@ -13,18 +13,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
     private TextInputEditText etEmail, etPassword, etConfirmPassword;
     private Button btnRegister;
     private TextView tvGoToLogin;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         addControls();
         addEvents();
     }
@@ -85,23 +88,31 @@ public class RegisterActivity extends AppCompatActivity {
         }
         btnRegister.setEnabled(false);
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new com.google.android.gms.tasks.OnCompleteListener<com.google.firebase.auth.AuthResult>() {
-                    @Override
-                    public void onComplete(com.google.android.gms.tasks.Task<com.google.firebase.auth.AuthResult> task) {
-                        btnRegister.setEnabled(true);
-                        if (task.isSuccessful()) {
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                user.sendEmailVerification();
-                                Toast.makeText(RegisterActivity.this, "Registration successful! Please check your email to verify your account.", Toast.LENGTH_LONG).show();
-                                // Optionally, redirect to login
-                                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                                startActivity(intent);
-                                finish();
-                            }
-                        } else {
-                            Toast.makeText(RegisterActivity.this, "Registration failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_LONG).show();
+                .addOnCompleteListener(this, task -> {
+                    btnRegister.setEnabled(true);
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            // Tạo user profile mặc định trên Firestore
+                            String uid = user.getUid();
+                            String defaultName = email.substring(0, email.indexOf("@"));
+                            db.collection("users").document(uid)
+                                .set(new java.util.HashMap<String, Object>() {{
+                                    put("displayName", defaultName);
+                                    put("bio", "");
+                                    put("contactInfo", email);
+                                    put("rating", 0.0);
+                                    put("profilePicUrl", "");
+                                    put("active", true);
+                                }});
+                            user.sendEmailVerification();
+                            Toast.makeText(RegisterActivity.this, "Registration successful! Please check your email to verify your account.", Toast.LENGTH_LONG).show();
+                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            finish();
                         }
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Registration failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_LONG).show();
                     }
                 });
     }
