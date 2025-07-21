@@ -82,6 +82,98 @@
         android:textSize="18sp"
         android:layout_marginTop="16dp"/>
 
+    <TextView
+        android:id="@+id/tvTotalTransactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Transactions: 0"
+        android:textColor="#888888"
+        android:layout_marginTop="4dp"/>
+
+    <!-- Seller Analytics Section -->
+    <TextView
+        android:id="@+id/tvSellerAnalyticsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Seller Analytics"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#1976D2"
+        android:layout_marginTop="24dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSellerListingsAnalytics"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+    <TextView
+        android:id="@+id/tvSalesHistoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sales History"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#1976D2"
+        android:layout_marginTop="16dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSalesHistory"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Buyer History Section -->
+    <TextView
+        android:id="@+id/tvBuyerHistoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Buyer History"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#1976D2"
+        android:layout_marginTop="24dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSavedItems"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOfferHistory"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPurchaseHistory"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Payment History Section -->
+    <TextView
+        android:id="@+id/tvPaymentHistoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Payment History"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#1976D2"
+        android:layout_marginTop="24dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPaymentHistory"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvReviews"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp"/>
+
     <Button
         android:id="@+id/btnSaveProfile"
         android:layout_width="match_parent"

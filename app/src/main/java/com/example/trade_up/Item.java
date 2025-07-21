@@ -7,7 +7,6 @@ public class Item {
     public String imageUrl;
     public String sellerId;
     public double price;
-
     public Item(String id, String title, String description, String imageUrl, String sellerId, double price) {
         this.id = id;
         this.title = title;
@@ -16,5 +15,5 @@ public class Item {
         this.sellerId = sellerId;
         this.price = price;
     }
+    public Item() {}
 }
-

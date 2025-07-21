@@ -156,6 +156,35 @@
             android:textAllCaps="false"
             android:visibility="gone"/>
 
+        <Button
+            android:id="@+id/btnReportListing"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Report Listing"
+            android:backgroundTint="#e53935"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnBlockSeller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Block Seller"
+            android:backgroundTint="#757575"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnMockPayment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mock Payment"
+            android:backgroundTint="#388E3C"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"/>
+
         <EditText
             android:id="@+id/etItemLocation"
             android:layout_width="match_parent"
@@ -168,5 +197,13 @@
             android:background="@drawable/edittext_background"
             android:textColor="#333"
             android:textColorHint="#888"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvOffers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
     </LinearLayout>
 </ScrollView>

@@ -10,6 +10,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -49,6 +50,19 @@ public class UserProfileActivity extends AppCompatActivity {
     private RecyclerView rvReviews;
     private ReviewAdapter reviewAdapter;
     private List<Review> reviewList = new ArrayList<>();
+    private RecyclerView rvSellerListingsAnalytics, rvSalesHistory, rvSavedItems, rvOfferHistory, rvPurchaseHistory, rvPaymentHistory;
+    private SellerListingAnalyticsAdapter sellerListingAnalyticsAdapter;
+    private SalesHistoryAdapter salesHistoryAdapter;
+    private SavedItemsAdapter savedItemsAdapter;
+    private OfferHistoryAdapter offerHistoryAdapter;
+    private PurchaseHistoryAdapter purchaseHistoryAdapter;
+    private PaymentHistoryAdapter paymentHistoryAdapter;
+    private List<SellerListingAnalytics> sellerListingAnalyticsList = new ArrayList<>();
+    private List<Sale> salesHistoryList = new ArrayList<>();
+    private List<Item> savedItemsList = new ArrayList<>();
+    private List<Offer> offerHistoryList = new ArrayList<>();
+    private List<Purchase> purchaseHistoryList = new ArrayList<>();
+    private List<Payment> paymentHistoryList = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -78,6 +92,30 @@ public class UserProfileActivity extends AppCompatActivity {
         rvReviews.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
         reviewAdapter = new ReviewAdapter(reviewList);
         rvReviews.setAdapter(reviewAdapter);
+        rvSellerListingsAnalytics = findViewById(R.id.rvSellerListingsAnalytics);
+        rvSalesHistory = findViewById(R.id.rvSalesHistory);
+        rvSavedItems = findViewById(R.id.rvSavedItems);
+        rvOfferHistory = findViewById(R.id.rvOfferHistory);
+        rvPurchaseHistory = findViewById(R.id.rvPurchaseHistory);
+        rvPaymentHistory = findViewById(R.id.rvPaymentHistory);
+        rvSellerListingsAnalytics.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        rvSalesHistory.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        rvSavedItems.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        rvOfferHistory.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        rvPurchaseHistory.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        rvPaymentHistory.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        sellerListingAnalyticsAdapter = new SellerListingAnalyticsAdapter(sellerListingAnalyticsList);
+        salesHistoryAdapter = new SalesHistoryAdapter(salesHistoryList);
+        savedItemsAdapter = new SavedItemsAdapter(savedItemsList);
+        offerHistoryAdapter = new OfferHistoryAdapter(offerHistoryList);
+        purchaseHistoryAdapter = new PurchaseHistoryAdapter(purchaseHistoryList);
+        paymentHistoryAdapter = new PaymentHistoryAdapter(paymentHistoryList);
+        rvSellerListingsAnalytics.setAdapter(sellerListingAnalyticsAdapter);
+        rvSalesHistory.setAdapter(salesHistoryAdapter);
+        rvSavedItems.setAdapter(savedItemsAdapter);
+        rvOfferHistory.setAdapter(offerHistoryAdapter);
+        rvPurchaseHistory.setAdapter(purchaseHistoryAdapter);
+        rvPaymentHistory.setAdapter(paymentHistoryAdapter);
     }
 
     private void addEvents() {
@@ -347,4 +385,5 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         }
     }
+    // Adapter/model classes for new sections would be defined below or in separate files
 }

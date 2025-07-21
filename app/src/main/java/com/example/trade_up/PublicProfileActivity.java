@@ -1,12 +1,16 @@
 package com.example.trade_up;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
@@ -19,6 +23,7 @@ public class PublicProfileActivity extends AppCompatActivity {
     private ReviewAdapter reviewAdapter;
     private List<Review> reviewList = new ArrayList<>();
     private FirebaseFirestore db;
+    private Button btnReportUser, btnBlockUser;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,6 +48,11 @@ public class PublicProfileActivity extends AppCompatActivity {
             return;
         }
         loadPublicProfile(userUid);
+
+        btnReportUser = findViewById(R.id.btnReportUser);
+        btnBlockUser = findViewById(R.id.btnBlockUser);
+        btnReportUser.setOnClickListener(v -> showReportDialog(userUid));
+        btnBlockUser.setOnClickListener(v -> showBlockDialog(userUid));
     }
 
     private void loadPublicProfile(String uid) {
@@ -95,6 +105,46 @@ public class PublicProfileActivity extends AppCompatActivity {
             });
     }
 
+    private void showReportDialog(String reportedUid) {
+        final String[] reasons = {"Scam/Fraud", "Inappropriate Content", "Spam"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Report User")
+            .setItems(reasons, (dialog, which) -> {
+                String reason = reasons[which];
+                submitReport(reportedUid, reason);
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void submitReport(String reportedUid, String reason) {
+        String reporterUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("reports").add(new Report(reporterUid, reportedUid, "user", reason, System.currentTimeMillis()))
+            .addOnSuccessListener(documentReference ->
+                Toast.makeText(this, "Report submitted", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Failed to submit report", Toast.LENGTH_SHORT).show());
+    }
+
+    private void showBlockDialog(String blockedUid) {
+        new AlertDialog.Builder(this)
+            .setTitle("Block User")
+            .setMessage("Are you sure you want to block this user?")
+            .setPositiveButton("Block", (dialog, which) -> blockUser(blockedUid))
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void blockUser(String blockedUid) {
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("users").document(currentUid)
+            .update("blockedUsers", com.google.firebase.firestore.FieldValue.arrayUnion(blockedUid))
+            .addOnSuccessListener(aVoid ->
+                Toast.makeText(this, "User blocked", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Failed to block user", Toast.LENGTH_SHORT).show());
+    }
+
     private static class Review {
         String fromUserUid, review;
         Double rating;
@@ -130,6 +180,19 @@ public class PublicProfileActivity extends AppCompatActivity {
                 tv1 = itemView.findViewById(android.R.id.text1);
                 tv2 = itemView.findViewById(android.R.id.text2);
             }
+        }
+    }
+
+    // Helper class for report
+    class Report {
+        public String reporterId, targetId, type, reason;
+        public long timestamp;
+        public Report(String reporterId, String targetId, String type, String reason, long timestamp) {
+            this.reporterId = reporterId;
+            this.targetId = targetId;
+            this.type = type;
+            this.reason = reason;
+            this.timestamp = timestamp;
         }
     }
 }

@@ -107,7 +107,7 @@ public class AddItemActivity extends AppCompatActivity {
         }
 
         btnAddPhoto.setOnClickListener(v -> openFileChooser());
-        btnAutofillLocation.setOnClickListener(v -> autofillLocation());
+        btnAutofillLocation.setOnClickListener(v -> requestLocationIfNeeded());
         btnSubmitItem.setOnClickListener(v -> submitItem());
         btnPreviewItem.setOnClickListener(v -> showPreviewDialog());
     }
@@ -144,32 +144,42 @@ public class AddItemActivity extends AppCompatActivity {
         return type != null && (type.equals("image/jpeg") || type.equals("image/png"));
     }
 
-    private void autofillLocation() {
+    // Add runtime location permission check and request logic
+    private void requestLocationIfNeeded() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                REQUEST_LOCATION_PERMISSION);
         } else {
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            Location location = null;
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            }
-            if (location == null && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-            if (location != null) {
-                etItemLocation.setText(location.getLatitude() + ", " + location.getLongitude());
-            } else {
-                Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show();
-            }
+            getLocationAndAutofill();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_LOCATION_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            autofillLocation();
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLocationAndAutofill();
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @android.annotation.SuppressLint("MissingPermission")
+    private void getLocationAndAutofill() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if (location != null) {
+            etItemLocation.setText(location.getLatitude() + ", " + location.getLongitude());
+        } else {
+            Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show();
         }
     }
 

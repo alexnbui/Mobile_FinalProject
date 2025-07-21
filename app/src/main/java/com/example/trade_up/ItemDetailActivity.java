@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
+import android.view.ViewGroup;
+import android.view.LayoutInflater;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -32,11 +34,12 @@ public class ItemDetailActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String sellerUid;
     private String itemId;
-    private Button btnChat, btnMakeOffer, btnMarkSold;
+    private Button btnChat, btnMakeOffer, btnMarkSold, btnReportListing, btnBlockSeller;
     private FirebaseUser currentUser;
     private RecyclerView rvOffers;
     private OfferAdapter offerAdapter;
     private List<Offer> offerList = new ArrayList<>();
+    private Button btnMockPayment;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,6 +61,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         btnMakeOffer = findViewById(R.id.btnMakeOffer);
         btnMarkSold = findViewById(R.id.btnMarkSold);
         rvOffers = findViewById(R.id.rvOffers);
+        btnReportListing = findViewById(R.id.btnReportListing);
+        btnBlockSeller = findViewById(R.id.btnBlockSeller);
+        btnMockPayment = findViewById(R.id.btnMockPayment);
         rvOffers.setVisibility(View.GONE);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
@@ -72,6 +78,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         loadItemDetails(itemId);
         btnMakeOffer.setOnClickListener(v -> showMakeOfferDialog());
         btnMarkSold.setOnClickListener(v -> markItemAsSold());
+        btnReportListing.setOnClickListener(v -> showReportListingDialog());
+        btnBlockSeller.setOnClickListener(v -> showBlockSellerDialog());
+        btnMockPayment.setOnClickListener(v -> showMockPaymentDialog());
     }
 
     private void showMakeOfferDialog() {
@@ -251,7 +260,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         OfferAdapter(List<Offer> offers) { this.offers = offers; }
         @Override
         public OfferViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
             return new OfferViewHolder(v);
         }
         @Override
@@ -351,5 +360,90 @@ public class ItemDetailActivity extends AppCompatActivity {
         if (itemId == null) return;
         db.collection("items").document(itemId)
             .update("views", com.google.firebase.firestore.FieldValue.increment(1));
+    }
+
+    private void showReportListingDialog() {
+        final String[] reasons = {"Scam/Fraud", "Inappropriate Content", "Spam"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Report Listing")
+            .setItems(reasons, (dialog, which) -> {
+                String reason = reasons[which];
+                submitListingReport(reason);
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void submitListingReport(String reason) {
+        String reporterUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("reports").add(new Report(reporterUid, itemId, "listing", reason, System.currentTimeMillis()))
+            .addOnSuccessListener(documentReference ->
+                Toast.makeText(this, "Report submitted", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Failed to submit report", Toast.LENGTH_SHORT).show());
+    }
+
+    private void showBlockSellerDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Block Seller")
+            .setMessage("Are you sure you want to block this seller?")
+            .setPositiveButton("Block", (dialog, which) -> blockSeller())
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void blockSeller() {
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("users").document(currentUid)
+            .update("blockedUsers", com.google.firebase.firestore.FieldValue.arrayUnion(sellerUid))
+            .addOnSuccessListener(aVoid ->
+                Toast.makeText(this, "Seller blocked", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Failed to block seller", Toast.LENGTH_SHORT).show());
+    }
+
+    private void showMockPaymentDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Mock Payment")
+            .setMessage("Confirm payment for this item?")
+            .setPositiveButton("Pay", (dialog, which) -> performMockPayment())
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void performMockPayment() {
+        String userUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String paymentId = db.collection("payments").document().getId();
+        double amount = 0;
+        if (tvItemPrice.getText() != null) {
+            try {
+                amount = Double.parseDouble(tvItemPrice.getText().toString().replace("$", ""));
+            } catch (Exception ignored) {}
+        }
+        java.util.Map<String, Object> payment = new java.util.HashMap<>();
+        payment.put("paymentId", paymentId);
+        payment.put("userUid", userUid);
+        payment.put("itemId", itemId);
+        payment.put("amount", amount);
+        payment.put("method", "Mock");
+        payment.put("timestamp", System.currentTimeMillis());
+        db.collection("payments").document(paymentId).set(payment)
+            .addOnSuccessListener(aVoid ->
+                Toast.makeText(this, "Payment successful!", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Payment failed!", Toast.LENGTH_SHORT).show());
+    }
+
+    // Helper class for report
+    class Report {
+        public String reporterId, targetId, type, reason;
+        public long timestamp;
+        public Report(String reporterId, String targetId, String type, String reason, long timestamp) {
+            this.reporterId = reporterId;
+            this.targetId = targetId;
+            this.type = type;
+            this.reason = reason;
+            this.timestamp = timestamp;
+        }
     }
 }

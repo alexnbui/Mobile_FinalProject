@@ -1,5 +1,6 @@
 package com.example.trade_up;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -181,7 +182,27 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        checkIfBlocked();
+        checkIfBlockedLogic();
+    }
+
+    private void checkIfBlockedLogic() {
+        String myUid = auth.getUid();
+        db.collection("users").document(otherUserUid).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    List<String> blockedUsers = (List<String>) doc.get("blockedUsers");
+                    if (blockedUsers != null && blockedUsers.contains(myUid)) {
+                        etMessage.setEnabled(false);
+                        btnSend.setEnabled(false);
+                        btnAttachImage.setEnabled(false);
+                        Toast.makeText(this, "You are blocked by this user.", Toast.LENGTH_LONG).show();
+                    } else {
+                        etMessage.setEnabled(true);
+                        btnSend.setEnabled(true);
+                        btnAttachImage.setEnabled(true);
+                    }
+                }
+            });
     }
 
     @Override
@@ -277,6 +298,19 @@ public class ChatActivity extends AppCompatActivity {
             } else {
                 vh.imgMessage.setVisibility(View.GONE);
             }
+            vh.itemView.setOnLongClickListener(v -> {
+                new AlertDialog.Builder(v.getContext())
+                    .setTitle("Report Message")
+                    .setMessage("Do you want to report this message as inappropriate?")
+                    .setPositiveButton("Report", (dialog, which) -> {
+                        if (v.getContext() instanceof ChatActivity) {
+                            ((ChatActivity) v.getContext()).reportChatMessage(msg);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+                return true;
+            });
         }
         @Override
         public int getItemCount() { return messages.size(); }
@@ -288,6 +322,28 @@ public class ChatActivity extends AppCompatActivity {
                 tvMessage = v.findViewById(R.id.tvMessage);
                 imgMessage = v.findViewById(R.id.imgMessage);
             }
+        }
+    }
+    // Add reporting for chat messages
+    private void reportChatMessage(Message msg) {
+        String reporterUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("reports").add(new Report(reporterUid, msg.senderId, "chat_message", "Inappropriate message", System.currentTimeMillis()))
+            .addOnSuccessListener(documentReference ->
+                Toast.makeText(this, "Message reported", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e ->
+                Toast.makeText(this, "Failed to report message", Toast.LENGTH_SHORT).show());
+    }
+
+    // Helper class for report
+    class Report {
+        public String reporterId, targetId, type, reason;
+        public long timestamp;
+        public Report(String reporterId, String targetId, String type, String reason, long timestamp) {
+            this.reporterId = reporterId;
+            this.targetId = targetId;
+            this.type = type;
+            this.reason = reason;
+            this.timestamp = timestamp;
         }
     }
     // TODO: Add block/report user logic
