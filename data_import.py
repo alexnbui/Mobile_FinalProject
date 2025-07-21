@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # Thay đường dẫn này bằng đường dẫn tới file serviceAccountKey.json của bạn
-cred = credentials.Certificate('path/to/serviceAccountKey.json')
+cred = credentials.Certificate('D:/Androi_Studio/Final_Project/tradeupapp-5b0c3-firebase-adminsdk-fbsvc-693e37166b.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
