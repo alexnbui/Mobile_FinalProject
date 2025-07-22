@@ -17,7 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
     private TextInputEditText etEmail, etPassword, etConfirmPassword;
-    private Button btnRegister;
+    private Button btnRegister, btnResendVerification;
     private TextView tvGoToLogin;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
@@ -37,6 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnRegister = findViewById(R.id.btnRegister);
+        btnResendVerification = findViewById(R.id.btnResendVerification);
         tvGoToLogin = findViewById(R.id.tvGoToLogin);
     }
 
@@ -59,6 +60,12 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 registerUser();
+            }
+        });
+        btnResendVerification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resendVerificationEmail();
             }
         });
         tvGoToLogin.setOnClickListener(new View.OnClickListener() {
@@ -93,27 +100,49 @@ public class RegisterActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            // Tạo user profile mặc định trên Firestore
                             String uid = user.getUid();
                             String defaultName = email.substring(0, email.indexOf("@"));
-                            db.collection("users").document(uid)
-                                .set(new java.util.HashMap<String, Object>() {{
-                                    put("displayName", defaultName);
-                                    put("bio", "");
-                                    put("contactInfo", email);
-                                    put("rating", 0.0);
-                                    put("profilePicUrl", "");
-                                    put("active", true);
-                                }});
-                            user.sendEmailVerification();
-                            Toast.makeText(RegisterActivity.this, "Registration successful! Please check your email to verify your account.", Toast.LENGTH_LONG).show();
-                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finish();
+                            // Đảm bảo ghi đủ trường user vào Firestore
+                            java.util.Map<String, Object> userMap = new java.util.HashMap<>();
+                            userMap.put("displayName", defaultName);
+                            userMap.put("bio", "");
+                            userMap.put("contactInfo", email);
+                            userMap.put("rating", 0.0);
+                            userMap.put("profilePicUrl", "");
+                            userMap.put("active", true);
+                            userMap.put("uid", uid);
+                            userMap.put("email", email);
+                            db.collection("users").document(uid).set(userMap)
+                                .addOnSuccessListener(aVoid -> {
+                                    user.sendEmailVerification();
+                                    Toast.makeText(RegisterActivity.this, "Registration successful! Please check your email to verify your account.", Toast.LENGTH_LONG).show();
+                                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(RegisterActivity.this, "Failed to save user profile.", Toast.LENGTH_LONG).show();
+                                });
                         }
                     } else {
                         Toast.makeText(RegisterActivity.this, "Registration failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void resendVerificationEmail() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null && !user.isEmailVerified()) {
+            user.sendEmailVerification()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(RegisterActivity.this, "Verification email sent! Please check your inbox.", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Failed to send verification email.", Toast.LENGTH_LONG).show();
+                    }
+                });
+        } else {
+            Toast.makeText(RegisterActivity.this, "No user or already verified.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -43,6 +43,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -308,25 +309,22 @@ public class AddItemActivity extends AppCompatActivity {
         }
         Uri uri = imageUris.get(index);
         try {
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-            bitmap = getCorrectlyOrientedBitmap(uri, bitmap);
-            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
-            FileOutputStream out = new FileOutputStream(tempFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-            out.close();
-            Uri uploadUri = Uri.fromFile(tempFile);
+            // Sử dụng InputStream để hỗ trợ SAF URI
+            InputStream inputStream = getContentResolver().openInputStream(uri);
             final StorageReference fileRef = storageRef.child(System.currentTimeMillis() + "_" + index + ".jpg");
-            fileRef.putFile(uploadUri)
+            fileRef.putStream(inputStream)
                     .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                         uploadedUrls.add(downloadUri.toString());
                         uploadNextImage(index + 1, uploadedUrls, uid, title, description, price, category, condition, location, status, itemBehavior, additionalTags);
                     }))
                     .addOnFailureListener(e -> {
-                        Toast.makeText(AddItemActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddItemActivity.this, "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("UploadError", "Upload failed", e);
                         btnSubmitItem.setEnabled(true);
                     });
         } catch (Exception e) {
-            Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Failed to process image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            android.util.Log.e("UploadError", "Process image failed", e);
             btnSubmitItem.setEnabled(true);
         }
     }
